@@ -73,3 +73,72 @@ pub fn validate_abs_path(path: &Path) -> anyhow::Result<()> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn request_parse_ping_status() {
+        assert_eq!(Request::parse_line("PING").unwrap(), Request::Ping);
+        assert_eq!(Request::parse_line("PING\n").unwrap(), Request::Ping);
+        assert_eq!(Request::parse_line("STATUS").unwrap(), Request::Status);
+        assert_eq!(Request::parse_line("STATUS\r\n").unwrap(), Request::Status);
+    }
+
+    #[test]
+    fn request_parse_set() {
+        let r = Request::parse_line("SET /tmp/x.png").unwrap();
+        assert_eq!(
+            r,
+            Request::Set {
+                path: PathBuf::from("/tmp/x.png")
+            }
+        );
+
+        let r = Request::parse_line("SET   /tmp/y.png  \n").unwrap();
+        assert_eq!(
+            r,
+            Request::Set {
+                path: PathBuf::from("/tmp/y.png")
+            }
+        );
+    }
+
+    #[test]
+    fn request_parse_errors() {
+        let err = Request::parse_line("SET  \n").unwrap_err();
+        assert!(format!("{err}").contains("SET requires a path"));
+
+        let err = Request::parse_line("NOPE").unwrap_err();
+        assert!(format!("{err}").contains("unknown_command"));
+    }
+
+    #[test]
+    fn response_roundtrip_ok() {
+        assert_eq!(
+            Response::parse_line(&Response::Ok.to_line()).unwrap(),
+            Response::Ok
+        );
+        assert_eq!(
+            Response::parse_line(&Response::OkMsg("hello".into()).to_line()).unwrap(),
+            Response::OkMsg("hello".into())
+        );
+        assert_eq!(
+            Response::parse_line(&Response::Err("bad".into()).to_line()).unwrap(),
+            Response::Err("bad".into())
+        );
+    }
+
+    #[test]
+    fn response_parse_errors() {
+        let err = Response::parse_line("WHAT\n").unwrap_err();
+        assert!(format!("{err:#}").contains("invalid_response"));
+    }
+
+    #[test]
+    fn validate_abs_path_enforces_absolute() {
+        validate_abs_path(Path::new("/tmp/ok")).unwrap();
+        assert!(validate_abs_path(Path::new("relative.png")).is_err());
+    }
+}
