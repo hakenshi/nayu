@@ -3,6 +3,17 @@ name = "nayu-infra"
 version = "0.1.0"
 edition = "2024"
 
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(coverage)"] }
+
 [dependencies]
 anyhow = "1"
 nayu-core = { path = "../nayu-core" }
+
+# Event loop + Wayland integration.
+# We enable SCTK's `calloop` feature but avoid its heavier defaults.
+calloop = "0.13"
+smithay-client-toolkit = { version = "0.19", default-features = false, features = ["calloop"] }
+
+[dev-dependencies]
+tempfile = "3"
