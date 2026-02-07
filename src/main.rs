@@ -1,3 +1,6 @@
+mod args;
+mod output;
+
 fn main() {
-    println!("Hello, world!");
+    println!("nayu: scaffolding (no implementation yet)");
 }
