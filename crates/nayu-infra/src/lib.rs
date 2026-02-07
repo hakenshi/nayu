@@ -7,3 +7,6 @@ pub mod process_runner;
 pub mod ipc;
 pub mod wayland;
 pub mod x11;
+
+// Re-export common entrypoints used by CLI.
+pub use ipc::{client, server};

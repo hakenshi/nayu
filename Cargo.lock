@@ -129,10 +129,17 @@ dependencies = [
 [[package]]
 name = "nayu-core"
 version = "0.1.0"
+dependencies = [
+ "anyhow",
+]
 
 [[package]]
 name = "nayu-infra"
 version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "nayu-core",
+]
 
 [[package]]
 name = "once_cell_polyfill"
