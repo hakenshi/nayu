@@ -2,7 +2,7 @@
 
 use std::io::{BufRead, BufReader, Write};
 use std::os::unix::net::UnixStream;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::thread;
 use std::time::{Duration, Instant};
@@ -12,15 +12,10 @@ use anyhow::{anyhow, Context};
 use nayu_core::protocol::{Request, Response};
 
 use crate::env_detect::{detect_session, SessionKind};
-
-fn socket_path() -> anyhow::Result<PathBuf> {
-    let dir =
-        std::env::var_os("XDG_RUNTIME_DIR").ok_or_else(|| anyhow!("XDG_RUNTIME_DIR is not set"))?;
-    Ok(Path::new(&dir).join("nayu.sock"))
-}
+use crate::wallpaper;
 
 fn connect() -> anyhow::Result<UnixStream> {
-    let sock = socket_path()?;
+    let sock = super::socket_path()?;
     UnixStream::connect(&sock).with_context(|| format!("connect {sock:?}"))
 }
 
@@ -65,6 +60,12 @@ pub fn set(image: PathBuf) -> anyhow::Result<()> {
 
     if !abs.exists() {
         return Err(anyhow!("image path does not exist")).with_context(|| format!("{abs:?}"));
+    }
+
+    // If we're on a supported desktop environment, prefer direct set (no daemon required).
+    // This makes it possible to use nayu standalone on COSMIC/GNOME/KDE.
+    if wallpaper::try_set_direct(&abs)? {
+        return Ok(());
     }
 
     match send(Request::Set { path: abs.clone() }) {
