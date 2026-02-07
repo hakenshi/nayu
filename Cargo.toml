@@ -1,0 +1,17 @@
+[package]
+name = "nayu"
+version = "0.1.0"
+edition = "2024"
+
+[workspace]
+members = [
+  "crates/nayu-core",
+  "crates/nayu-infra",
+]
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+
+nayu-core = { path = "crates/nayu-core" }
+nayu-infra = { path = "crates/nayu-infra" }
